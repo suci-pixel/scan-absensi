@@ -185,18 +185,19 @@
       
       <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 text-white transform -translate-x-full md:translate-x-0 transition-all duration-300 ease-in-out flex flex-col h-full shadow-2xl border-r border-indigo-900/30" style="background-color: rgb(26, 25, 103);">
           
-          <div id="sidebarHeader" class="h-16 flex items-center justify-start px-6 border-b border-indigo-900/50 overflow-hidden relative transition-all duration-300">
-              <div class="absolute top-0 left-0 w-full h-full bg-white/5 pointer-events-none"></div>
-              <div class="flex items-center space-x-3 relative z-10 w-full">
-                  <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-900/50 shrink-0 transition-all duration-300">
-                      <img data-app-logo src="..." />
-                  </div>
-                  <div class="sidebar-label transition-opacity duration-300 whitespace-nowrap">
-                      <h1 data-app-name="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
-                      <h1 data-app-name="text-[9px] text-indigo-200 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</h1>
-                  </div>
-              </div>
-          </div>
+        <div id="sidebarHeader" class="h-16 flex items-center justify-start px-6 border-b border-indigo-900/50 overflow-hidden relative transition-all duration-300">
+            <div class="absolute top-0 left-0 w-full h-full bg-white/5 pointer-events-none"></div>
+            <div class="flex items-center space-x-3 relative z-10 w-full">
+                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-900/50 shrink-0 transition-all duration-300 overflow-hidden">
+                <img data-app-logo src="..." alt="Logo Aplikasi" class="w-full h-full object-cover" />
+                </div>
+                <div class="sidebar-label transition-opacity duration-300 whitespace-nowrap">
+                <h1 data-app-name class="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
+                <p class="text-[9px] text-indigo-200 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
+                </div>
+            </div>
+        </div>
+
      
           <div class="p-4 overflow-hidden transition-all duration-300">
               <div id="userProfileCard" class="flex items-center space-x-3 p-3 bg-black/20 rounded-xl border border-white/10 transition-all duration-300 overflow-hidden">
@@ -3846,8 +3847,6 @@ function loadSettings() {
 
 </body>
 </html>
-
-
 
 
 
