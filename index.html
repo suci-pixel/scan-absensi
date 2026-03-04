@@ -189,11 +189,11 @@
               <div class="absolute top-0 left-0 w-full h-full bg-white/5 pointer-events-none"></div>
               <div class="flex items-center space-x-3 relative z-10 w-full">
                   <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-900/50 shrink-0 transition-all duration-300">
-                      <i class="fas fa-qrcode text-sm"></i>
+                      <img data-app-logo src="..." />
                   </div>
                   <div class="sidebar-label transition-opacity duration-300 whitespace-nowrap">
-                      <h1 class="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
-                      <p class="text-[9px] text-indigo-200 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
+                      <<h1 data-app-name="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
+                      <<h1 data-app-name="text-[9px] text-indigo-200 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
                   </div>
               </div>
           </div>
@@ -3580,7 +3580,6 @@ function loadSettings() {
     // ==========================================================================
     // 10. START APP
     // ==========================================================================
-    checkSession();
 
 
 </script>
@@ -3731,7 +3730,9 @@ function loadSettings() {
     window.google = window.google || {};
     window.google.script = window.google.script || {};
     window.google.script.run = makeRunner();
+    checkSession();
   })();
+
 </script>
 
 </body>
