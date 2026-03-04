@@ -1804,6 +1804,85 @@ function loadGuruDashboard() {
             }
         });
     }
+    // Helper: Animasi scanner (Counter Up)
+    function showPanggilScanProcessing() {
+        const resultDiv = document.getElementById('scanResult');
+        if (!resultDiv) return;
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="bg-indigo-50 text-indigo-700 p-4 rounded-xl border border-indigo-100 flex items-center justify-center animate-pulse font-bold shadow-sm">
+            <i class="fas fa-circle-notch fa-spin mr-3"></i> Memproses QR Panggilan...
+            </div>`;
+        }
+
+    function showPanggilScanSuccess(nama, kelas, repeat) {
+        const resultDiv = document.getElementById('scanResult');
+        if (!resultDiv) return;
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="bg-emerald-50 text-emerald-800 p-5 rounded-2xl border border-emerald-100 shadow-sm animate-fade-in">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                <i class="fas fa-volume-up"></i>
+                </div>
+                <div>
+                <div class="text-sm font-bold">${nama}</div>
+                <div class="text-xs opacity-80">${kelas} • Dipanggil ${repeat}x</div>
+                </div>
+            </div>
+            <p class="text-[11px] mt-3 font-semibold opacity-70">Siap scan siswa berikutnya...</p>
+            </div>`;
+        }
+
+    function showPanggilScanError(msg) {
+        const resultDiv = document.getElementById('scanResult');
+        if (!resultDiv) return;
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 font-bold text-sm">
+            <i class="fas fa-exclamation-triangle mr-2"></i>${msg}
+            </div>`;
+}
+
+    // Helper: Animasi Angka (Counter Up)
+    function showPanggilScanProcessing() {
+  const resultDiv = document.getElementById('scanResult');
+  if (!resultDiv) return;
+  resultDiv.classList.remove('hidden');
+  resultDiv.innerHTML = `
+    <div class="bg-indigo-50 text-indigo-700 p-4 rounded-xl border border-indigo-100 flex items-center justify-center animate-pulse font-bold shadow-sm">
+      <i class="fas fa-circle-notch fa-spin mr-3"></i> Memproses QR Panggilan...
+    </div>`;
+}
+
+function showPanggilScanSuccess(nama, kelas, repeat) {
+  const resultDiv = document.getElementById('scanResult');
+  if (!resultDiv) return;
+  resultDiv.classList.remove('hidden');
+  resultDiv.innerHTML = `
+    <div class="bg-emerald-50 text-emerald-800 p-5 rounded-2xl border border-emerald-100 shadow-sm animate-fade-in">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+          <i class="fas fa-volume-up"></i>
+        </div>
+        <div>
+          <div class="text-sm font-bold">${nama}</div>
+          <div class="text-xs opacity-80">${kelas} • Dipanggil ${repeat}x</div>
+        </div>
+      </div>
+      <p class="text-[11px] mt-3 font-semibold opacity-70">Siap scan siswa berikutnya...</p>
+    </div>`;
+}
+
+function showPanggilScanError(msg) {
+  const resultDiv = document.getElementById('scanResult');
+  if (!resultDiv) return;
+  resultDiv.classList.remove('hidden');
+  resultDiv.innerHTML = `
+    <div class="bg-red-50 text-red-700 p-4 rounded-xl border border-red-100 font-bold text-sm">
+      <i class="fas fa-exclamation-triangle mr-2"></i>${msg}
+    </div>`;
+}
 
     // Helper: Animasi Angka (Counter Up)
     function animateValue(id, start, end, duration) {
@@ -2976,22 +3055,38 @@ function onScanSuccess(decodedText) {
             const nisn = String(decodedText || '').trim();
             if (!nisn) return;
             if (isScanning) return;
+
             isScanning = true;
+            showPanggilScanProcessing();
 
             google.script.run.withSuccessHandler(res => {
-                isScanning = false;
                 if (res.success && res.data) {
                 const s = res.data;
                 const namaPendek = s.namaPendek || (s.nama || '').split(' ')[0];
-                const key = `${s.nisn}-${Date.now()}`;
-                lastSpokenKey = key;
                 speakPanggilan(namaPendek, s.kelas || '-', panggilRepeat);
-                } else {
-                showAlert('error', res.message || 'Siswa tidak ditemukan');
+                showPanggilScanSuccess(s.nama || namaPendek, s.kelas || '-', panggilRepeat);
+
+                const selectedEl = document.getElementById('panggilSelected');
+                if (selectedEl) {
+                    selectedEl.innerHTML = `
+                    <div class="text-xs text-gray-500">Terakhir dipanggil</div>
+                    <div class="text-sm font-bold text-gray-800">${s.nama} (${s.kelas})</div>
+                    `;
                 }
+
+                setTimeout(() => { isScanning = false; }, 1200);
+                } else {
+                showPanggilScanError(res.message || 'Siswa tidak ditemukan');
+                setTimeout(() => { isScanning = false; }, 1200);
+                }
+            }).withFailureHandler(err => {
+                showPanggilScanError('Gagal koneksi: ' + err);
+                setTimeout(() => { isScanning = false; }, 1200);
             }).getSiswaByNisn(nisn);
+
             return;
-            }
+        }
+
 
         if (!decodedText || decodedText.trim() === "" || decodedText === "undefined") return;
         if (isScanning) return; 
