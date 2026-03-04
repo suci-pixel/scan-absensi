@@ -193,7 +193,7 @@
                 </div>
                 <div class="sidebar-label transition-opacity duration-300 whitespace-nowrap">
                 <h1 data-app-name class="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
-                <p class="text-[5px] text-indigo-200 uppercase tracking-wider font-regular">SD ISLAM TELADAN SUCI</p>
+                <p class="text-[9px] text-indigo-100 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
                 </div>
             </div>
         </div>
@@ -866,6 +866,7 @@
                       <th class="p-4 text-center">Kelas</th>
                       <th class="p-4 text-center">Jam Datang</th>
                       <th class="p-4 text-center">Jam Pulang</th>
+                      <th class="p-4 text-center">Jam Jemput</th>
                       <th class="p-4 text-center">Keterangan Waktu</th>
                       <th class="p-4 text-center">Status Kehadiran</th>
                   </tr>
@@ -2626,7 +2627,7 @@ function renderRekapRows(data) {
     
     // Update colspan jadi 8 karena kolom bertambah
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-gray-400">Tidak ada data ditemukan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-gray-400">Tidak ada data ditemukan.</td></tr>';
         return;
     }
     
@@ -2646,44 +2647,29 @@ function renderRekapRows(data) {
         let ketStyle = "text-gray-500";
         let ketIcon = "";
         
-        if (String(ketText).includes("Terlambat")) {
+         if (String(ketText).includes("Terlambat")) {
             ketStyle = "text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded border border-rose-100 text-[10px]";
             ketIcon = '<i class="fas fa-history mr-1"></i>';
-        } else if (String(ketText).includes("Pulang Cepat")) {
+            } else if (String(ketText).includes("Pulang Cepat")) {
             ketStyle = "text-orange-600 font-bold bg-orange-50 px-2 py-1 rounded border border-orange-100 text-[10px]";
             ketIcon = '<i class="fas fa-running mr-1"></i>';
-        } else if (ketText === "Tepat Waktu") {
+            } else if (ketText === "Tepat Waktu") {
             ketStyle = "text-emerald-600 font-bold text-[10px]";
             ketIcon = '<i class="fas fa-check-double mr-1"></i>';
         }
 
         return `
-        <tr class="hover:bg-gray-50 border-b border-gray-50 transition">
-            <td class="p-4 text-center text-gray-500 text-xs">${i + 1}</td>
-            
-            <td class="p-4 text-sm text-gray-600">
-               ${new Date(d.tanggal).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}
-            </td>
-            
-            <td class="p-4 text-sm font-bold text-gray-900">${d.nama}</td>
-            
-            <td class="p-4 text-center text-sm text-gray-600">
-               <span class="bg-gray-100 px-2 py-1 rounded text-xs font-bold">${d.kelas}</span>
-            </td>
-            
-            <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamDatang}</td>
-            <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamPulang}</td>
-            
-            <td class="p-4 text-center align-middle">
-               <span class="${ketStyle} inline-block whitespace-nowrap">${ketIcon}${ketText}</span>
-            </td>
-            
-            <td class="p-4 text-center text-sm">
-                <span class="${getStatusColor(d.status)} px-2 py-1 rounded text-xs font-bold">
-                   ${d.status || 'Hadir'}
-                </span>
-            </td>
-        </tr>`;
+            <tr class="hover:bg-gray-50 border-b border-gray-50 transition">
+                <td class="p-4 text-center text-gray-500 text-xs">${i + 1}</td>
+                <td class="p-4 text-sm text-gray-600">${new Date(d.tanggal).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}</td>
+                <td class="p-4 text-sm font-bold text-gray-900">${d.nama}</td>
+                <td class="p-4 text-center text-sm text-gray-600"><span class="bg-gray-100 px-2 py-1 rounded text-xs font-bold">${d.kelas}</span></td>
+                <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamDatang}</td>
+                <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamPulang}</td>
+                <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamJemput || '-'}</td>
+                <td class="p-4 text-center align-middle"><span class="${ketStyle} inline-block whitespace-nowrap">${ketIcon}${ketText}</span></td>
+                <td class="p-4 text-center text-sm"><span class="${getStatusColor(d.status)} px-2 py-1 rounded text-xs font-bold">${d.status || 'Hadir'}</span></td>
+            </tr>`;
     }).join('');
 }
 
@@ -3847,7 +3833,6 @@ function loadSettings() {
 
 </body>
 </html>
-
 
 
 
