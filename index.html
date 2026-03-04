@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Scan Absensi</title>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+<style>
+body { font-family: Arial; text-align:center; padding:20px; }
+#reader { width:300px; margin:auto; }
+button { padding:10px 20px; margin:10px; }
+</style>
+</head>
+<body>
+
+<h2>Scan QR Absensi</h2>
+
+<div id="reader"></div>
+<div id="result"></div>
+
+<script>
+const API_URL = "PASTE_LINK_APPS_SCRIPT_DISINI";
+
+const html5QrCode = new Html5Qrcode("reader");
+
+function startScanner() {
+  html5QrCode.start(
+    { facingMode: { ideal: "environment" } },
+    { fps: 10, qrbox: 250 },
+    onScanSuccess
+  );
+}
+
+function onScanSuccess(decodedText) {
+
+  html5QrCode.stop();
+
+  document.getElementById("result").innerHTML = "Memproses...";
+
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      nisn: decodedText,
+      role: "guru",
+      kelas: "X-A"
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("result").innerHTML =
+      "<b>" + data.message + "</b>";
+    setTimeout(startScanner, 2000);
+  })
+  .catch(err => {
+    document.getElementById("result").innerHTML =
+      "Error: " + err;
+  });
+}
+
+startScanner();
+</script>
+
+</body>
+</html>
