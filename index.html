@@ -887,6 +887,11 @@
   <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-3 md:items-end">
       <div class="flex-1">
+        <div class="w-full md:w-auto">
+            <button onclick="loadScanAbsensi('panggil')" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold">
+                <i class="fas fa-qrcode mr-2"></i>Scan QR Panggil
+            </button>
+        </div>
         <label class="text-[10px] font-bold text-gray-500 uppercase">Cari Siswa</label>
         <input type="text" oninput="onSearchPanggilSiswa(this.value)"
           class="w-full border border-gray-200 rounded-lg p-2 text-sm"
@@ -3043,18 +3048,27 @@ function onScanSuccess(decodedText) {
     function stopAndBack(redirect = true) {
         if (html5QrCode) {
             html5QrCode.stop().then(() => {
-                html5QrCode.clear();
-                html5QrCode = null;
-                isScanning = false;
-                if (redirect && currentUser) returnToDashboard();
+            html5QrCode.clear();
+            html5QrCode = null;
+            isScanning = false;
+            if (redirect && currentUser) returnAfterScanner();
             }).catch(() => {
-                html5QrCode = null;
-                if (redirect && currentUser) returnToDashboard();
+            html5QrCode = null;
+            if (redirect && currentUser) returnAfterScanner();
             });
         } else {
-            if (redirect && currentUser) returnToDashboard();
+            if (redirect && currentUser) returnAfterScanner();
+        }
+        }
+
+    function returnAfterScanner() {
+        if (scanMode === 'panggil') {
+            loadPanggilSiswa();
+        } else {
+            returnToDashboard();
         }
     }
+
     
     function returnToDashboard() {
         if(currentUser.role === 'admin') loadAdminDashboard();
