@@ -1029,7 +1029,30 @@
         <p class="text-slate-800 text-xs font-bold tracking-wide">Memproses...</p>
     </div>
   </div>
-  
+<div id="view-panggil-siswa" class="view-section animate-fade-in">
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-3 md:items-end">
+      <div class="flex-1">
+        <label class="text-[10px] font-bold text-gray-500 uppercase">Cari Siswa</label>
+        <input type="text" oninput="onSearchPanggilSiswa(this.value)"
+          class="w-full border border-gray-200 rounded-lg p-2 text-sm"
+          placeholder="Ketik nama / nama pendek / nisn / kelas">
+      </div>
+      <div class="w-full md:w-40">
+        <label class="text-[10px] font-bold text-gray-500 uppercase">Ulang Panggilan</label>
+        <select onchange="onChangePanggilRepeat(this.value)" class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+          <option value="1">1x</option>
+          <option value="2">2x</option>
+          <option value="3">3x</option>
+          <option value="5">5x</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="panggilSelected" class="px-4 py-3 bg-gray-50 text-sm"></div>
+    <div id="panggilList" class="max-h-[420px] overflow-y-auto"></div>
+  </div>
+</div>  
   <div id="modalContainer"></div>
 <script>
     // ==========================================================================
@@ -1039,6 +1062,10 @@
     let html5QrCode = null;
     let isScanning = false;
     let isSidebarOpen = true; 
+    let scanMode = 'absensi'; // absensi | panggil
+    let lastSpokenKey = '';
+    let daftarSiswaPanggil = [];
+    let panggilRepeat = 1;
     
     // --- SMART CACHE ---
     let appCache = {
@@ -1436,12 +1463,14 @@ function processTableData(type) {
             menuHTML += createItem('Laporan', 'fa-clipboard-list', 'loadRekapAbsensi()');
             menuHTML += createItem('Kelola Absen', 'fa-calendar-times', 'loadKelolaAbsen()'); // MENU BARU
             menuHTML += createItem('Scan Absensi', 'fa-qrcode', 'loadScanAbsensi()');
+            menuHTML += createItem('Panggil Siswa', 'fa-bullhorn', 'loadPanggilSiswa()');
             loadAdminDashboard();
         } 
         else if (currentUser.role === 'guru') {
             menuHTML += createItem('Dashboard', 'fa-home', 'loadGuruDashboard()', true);
             menuHTML += createItem('Monitoring', 'fa-eye', 'loadMonitoringAbsensi()');
             menuHTML += createItem('Scan Absensi', 'fa-qrcode', 'loadScanAbsensi()');
+            menuHTML += createItem('Settings', 'fa-cog', 'loadSettings()');
             loadGuruDashboard();
         } 
         else if (currentUser.role === 'siswa') {
@@ -1505,7 +1534,30 @@ function processTableData(type) {
             setTimeout(() => dropdown.classList.add('hidden'), 200);
         }
     }
+ // ==========================================================================
+ //  FUNGSI PANGGIL SISWA
+ // ==========================================================================
+function speakPanggilan(namaPendek, kelas, repeat) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
 
+  const text = `${namaPendek}, kelas ${kelas}, silakan menuju penjemput.`;
+  let count = Number(repeat) || 1;
+
+  const speakOnce = () => {
+    if (count <= 0) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1;
+    u.onend = () => {
+      count--;
+      if (count > 0) setTimeout(speakOnce, 300);
+    };
+    speechSynthesis.speak(u);
+  };
+  speakOnce();
+}
     // ==========================================================================
     // 6. FUNGSI REFRESH DATA
     // ==========================================================================
@@ -2060,6 +2112,39 @@ function loadGuruDashboard() {
             }).deleteHariLibur(tgl);
         }
     }
+    // --- Menu Setting ---
+async function submitBranding(e) {
+    e.preventDefault();
+    const appName = document.getElementById('setAppName').value.trim();
+    const file = document.getElementById('setLogoFile').files[0];
+    const token = currentUser.token;
+
+    let logoBase64 = '', logoMimeType = '', logoFileName = '';
+    if (file) {
+        const buf = await file.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        logoBase64 = btoa(bin);
+        logoMimeType = file.type;
+        logoFileName = file.name;
+    }
+
+    google.script.run.withSuccessHandler(res => {
+        if (res.success) {
+        showAlert('success', 'Setting tampilan tersimpan');
+        applyBrandingToUI(res.data.appName, res.data.logoUrl);
+        } else {
+        showAlert('error', res.message);
+        }
+    }).saveBranding(token, appName, logoBase64, logoMimeType, logoFileName);
+    }
+function applyBrandingToUI(appName, logoUrl) {
+    document.querySelectorAll('[data-app-name]').forEach(el => el.textContent = appName || 'SD ISLAM TELADAN SUCI');
+    if (logoUrl) {
+        document.querySelectorAll('[data-app-logo]').forEach(img => img.src = logoUrl);
+    }
+    }   
 
     // --- DATA SISWA ---
 function loadDataSiswa() {
@@ -2856,6 +2941,27 @@ function initCamera(mode) {
 
 
 function onScanSuccess(decodedText) {
+        if (scanMode === 'panggil') {
+            const nisn = String(decodedText || '').trim();
+            if (!nisn) return;
+            if (isScanning) return;
+            isScanning = true;
+
+            google.script.run.withSuccessHandler(res => {
+                isScanning = false;
+                if (res.success && res.data) {
+                const s = res.data;
+                const namaPendek = s.namaPendek || (s.nama || '').split(' ')[0];
+                const key = `${s.nisn}-${Date.now()}`;
+                lastSpokenKey = key;
+                speakPanggilan(namaPendek, s.kelas || '-', panggilRepeat);
+                } else {
+                showAlert('error', res.message || 'Siswa tidak ditemukan');
+                }
+            }).getSiswaByNisn(nisn);
+            return;
+            }
+
         if (!decodedText || decodedText.trim() === "" || decodedText === "undefined") return;
         if (isScanning) return; 
         isScanning = true;
@@ -3338,11 +3444,16 @@ function deleteGuruConfirm(username) {
     function generateQRForSiswa(nisn, nama, kelas) {
         loadQRCodeSiswa(nisn, nama, kelas);
     }
+    // ==========================================================================
+    // 10. START APP
+    // ==========================================================================
 
     // ==========================================================================
     // 10. START APP
     // ==========================================================================
     checkSession();
+
+
 </script>
 
 <script>
@@ -3482,5 +3593,6 @@ function deleteGuruConfirm(username) {
 
 </body>
 </html>
+
 
 
