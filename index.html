@@ -1,64 +1,114 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Scan Absensi</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-<style>
-body { font-family: Arial; text-align:center; padding:20px; }
-#reader { width:300px; margin:auto; }
-button { padding:10px 20px; margin:10px; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Scan Kamera</title>
+
+  <!-- Library QR -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f5f7fb;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    #reader {
+      width: 320px;
+      margin: 20px auto;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-back {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-front {
+      background: #7c3aed;
+      color: white;
+    }
+    .btn-stop {
+      background: #dc2626;
+      color: white;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #111827;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Scan QR Absensi</h2>
+  <h2>Test Scan Kamera QR</h2>
 
-<div id="reader"></div>
-<div id="result"></div>
+  <div>
+    <button class="btn-back" onclick="startScanner('environment')">Kamera Belakang</button>
+    <button class="btn-front" onclick="startScanner('user')">Kamera Depan</button>
+    <button class="btn-stop" onclick="stopScanner()">Stop</button>
+  </div>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbwQfvaqhqefcwgS_ZfDnp-XFuSDDLW6BK0vWXcHB-E8tXweBCS6VXYmngBWGtedwHhsdA/exec";
+  <div id="reader"></div>
+  <div id="result">Belum ada hasil scan</div>
 
-const html5QrCode = new Html5Qrcode("reader");
+  <script>
+    let html5QrCode;
 
-function startScanner() {
-  html5QrCode.start(
-    { facingMode: { ideal: "environment" } },
-    { fps: 10, qrbox: 250 },
-    onScanSuccess
-  );
-}
+    function startScanner(mode) {
 
-function onScanSuccess(decodedText) {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          initScanner(mode);
+        }).catch(() => initScanner(mode));
+      } else {
+        initScanner(mode);
+      }
+    }
 
-  html5QrCode.stop();
+    function initScanner(mode) {
 
-  document.getElementById("result").innerHTML = "Memproses...";
+      html5QrCode = new Html5Qrcode("reader");
 
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({
-      nisn: decodedText,
-      role: "guru",
-      kelas: "X-A"
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("result").innerHTML =
-      "<b>" + data.message + "</b>";
-    setTimeout(startScanner, 2000);
-  })
-  .catch(err => {
-    document.getElementById("result").innerHTML =
-      "Error: " + err;
-  });
-}
+      html5QrCode.start(
+        { facingMode: { ideal: mode } },
+        {
+          fps: 10,
+          qrbox: 250
+        },
+        (decodedText) => {
+          document.getElementById("result").innerHTML =
+            "Hasil Scan: <br><span style='color:green'>" + decodedText + "</span>";
+        },
+        () => {}
+      ).catch(err => {
+        document.getElementById("result").innerHTML =
+          "<span style='color:red'>Error: " + err.name + " - " + err.message + "</span>";
+        console.error(err);
+      });
+    }
 
-startScanner();
-</script>
+    function stopScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          document.getElementById("result").innerHTML = "Scanner dihentikan";
+        });
+      }
+    }
+  </script>
 
 </body>
-
 </html>
