@@ -883,6 +883,48 @@
         </div>
     </div>
 </div>
+<div id="view-panggil-siswa" class="view-section animate-fade-in">
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-3 md:items-end">
+      <div class="flex-1">
+        <label class="text-[10px] font-bold text-gray-500 uppercase">Cari Siswa</label>
+        <input type="text" oninput="onSearchPanggilSiswa(this.value)"
+          class="w-full border border-gray-200 rounded-lg p-2 text-sm"
+          placeholder="Ketik nama / nama pendek / nisn / kelas">
+      </div>
+      <div class="w-full md:w-40">
+        <label class="text-[10px] font-bold text-gray-500 uppercase">Ulang Panggilan</label>
+        <select onchange="onChangePanggilRepeat(this.value)" class="w-full border border-gray-200 rounded-lg p-2 text-sm">
+          <option value="1">1x</option>
+          <option value="2">2x</option>
+          <option value="3">3x</option>
+          <option value="5">5x</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="panggilSelected" class="px-4 py-3 bg-gray-50 text-sm"></div>
+    <div id="panggilList" class="max-h-[420px] overflow-y-auto"></div>
+  </div>
+</div>  
+<div id="view-settings" class="view-section animate-fade-in">
+  <div class="bg-white rounded-xl border border-gray-200 p-6 max-w-2xl">
+    <h3 class="font-bold text-lg text-gray-800 mb-4">Settings Aplikasi</h3>
+    <form onsubmit="submitBranding(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Aplikasi</label>
+        <input id="setAppName" type="text" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm" placeholder="Contoh: SD Islam Teladan Suci">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Logo Aplikasi</label>
+        <input id="setLogoFile" type="file" accept="image/*" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm">
+      </div>
+      <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold">
+        <i class="fas fa-save mr-2"></i>Simpan
+      </button>
+    </form>
+  </div>
+</div>
 
 <div id="view-rekap-absensi" class="view-section animate-fade-in">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1029,30 +1071,7 @@
         <p class="text-slate-800 text-xs font-bold tracking-wide">Memproses...</p>
     </div>
   </div>
-<div id="view-panggil-siswa" class="view-section animate-fade-in">
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-    <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-3 md:items-end">
-      <div class="flex-1">
-        <label class="text-[10px] font-bold text-gray-500 uppercase">Cari Siswa</label>
-        <input type="text" oninput="onSearchPanggilSiswa(this.value)"
-          class="w-full border border-gray-200 rounded-lg p-2 text-sm"
-          placeholder="Ketik nama / nama pendek / nisn / kelas">
-      </div>
-      <div class="w-full md:w-40">
-        <label class="text-[10px] font-bold text-gray-500 uppercase">Ulang Panggilan</label>
-        <select onchange="onChangePanggilRepeat(this.value)" class="w-full border border-gray-200 rounded-lg p-2 text-sm">
-          <option value="1">1x</option>
-          <option value="2">2x</option>
-          <option value="3">3x</option>
-          <option value="5">5x</option>
-        </select>
-      </div>
-    </div>
 
-    <div id="panggilSelected" class="px-4 py-3 bg-gray-50 text-sm"></div>
-    <div id="panggilList" class="max-h-[420px] overflow-y-auto"></div>
-  </div>
-</div>  
   <div id="modalContainer"></div>
 <script>
     // ==========================================================================
@@ -1066,6 +1085,7 @@
     let lastSpokenKey = '';
     let daftarSiswaPanggil = [];
     let panggilRepeat = 1;
+    let panggilFiltered = [];
     
     // --- SMART CACHE ---
     let appCache = {
@@ -1257,6 +1277,9 @@ function processTableData(type) {
             case 'view-monitoring': title = "Monitoring Realtime"; break;
             case 'view-rekap-absensi': title = "Laporan Kehadiran"; break;
             case 'view-kartu-siswa': title = "Kartu Pelajar Digital"; break;
+            case 'view-panggil-siswa': title = "Panggil Siswa"; break;
+            case 'view-settings': title = "Settings"; break;
+
         }
         document.getElementById('pageTitle').textContent = title;
         closeSidebarMobile();
@@ -1464,6 +1487,7 @@ function processTableData(type) {
             menuHTML += createItem('Kelola Absen', 'fa-calendar-times', 'loadKelolaAbsen()'); // MENU BARU
             menuHTML += createItem('Scan Absensi', 'fa-qrcode', 'loadScanAbsensi()');
             menuHTML += createItem('Panggil Siswa', 'fa-bullhorn', 'loadPanggilSiswa()');
+            menuHTML += createItem('Settings', 'fa-cog', 'loadSettings()');
             loadAdminDashboard();
         } 
         else if (currentUser.role === 'guru') {
@@ -2852,12 +2876,14 @@ function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
         }, 100);
     }
     // --- SCANNER ---
-    function loadScanAbsensi() {
+    function loadScanAbsensi(mode = 'absensi') {
+        scanMode = mode;
         isScanning = false;
-        setActiveMenu('Scan Absensi');
+        setActiveMenu(mode === 'panggil' ? 'Panggil Siswa' : 'Scan Absensi');
         showView('view-scanner');
         setTimeout(() => { startCamera('environment'); }, 500);
     }
+
 
     function startCamera(mode) {
         if (html5QrCode) {
@@ -3158,6 +3184,98 @@ function onScanSuccess(decodedText) {
             </div>
         </div>`;
     }
+// Fungsi panggil siswa  
+function loadPanggilSiswa() {
+  stopAndBack(false);
+  scanMode = 'panggil';
+  setActiveMenu('Panggil Siswa');
+  showView('view-panggil-siswa');
+
+  const listEl = document.getElementById('panggilList');
+  listEl.innerHTML = '<div class="p-3 text-xs text-gray-500">Memuat data siswa...</div>';
+
+  google.script.run.withSuccessHandler(res => {
+    if (!res.success) {
+      listEl.innerHTML = `<div class="p-3 text-xs text-red-500">${res.message}</div>`;
+      return;
+    }
+    daftarSiswaPanggil = res.data || [];
+    panggilFiltered = [...daftarSiswaPanggil];
+    renderPanggilList();
+  }).getSiswaList();
+}
+
+function onChangePanggilRepeat(val) {
+  panggilRepeat = Number(val) || 1;
+}
+
+function onSearchPanggilSiswa(keyword) {
+  const q = (keyword || '').toLowerCase().trim();
+  if (!q) {
+    panggilFiltered = [...daftarSiswaPanggil];
+    renderPanggilList();
+    return;
+  }
+
+  panggilFiltered = daftarSiswaPanggil.filter(s => {
+    const nama = String(s.nama || '').toLowerCase();
+    const namaPendek = String(s.namaPendek || '').toLowerCase();
+    const nisn = String(s.nisn || '').toLowerCase();
+    const kelas = String(s.kelas || '').toLowerCase();
+    return nama.includes(q) || namaPendek.includes(q) || nisn.includes(q) || kelas.includes(q);
+  });
+
+  renderPanggilList();
+}
+
+function renderPanggilList() {
+  const listEl = document.getElementById('panggilList');
+  if (!panggilFiltered.length) {
+    listEl.innerHTML = '<div class="p-3 text-xs text-gray-500">Data tidak ditemukan.</div>';
+    return;
+  }
+
+  listEl.innerHTML = panggilFiltered.map((s, i) => {
+    const namaPendek = s.namaPendek || String(s.nama || '').split(' ')[0];
+    return `
+      <button type="button" onclick="pilihSiswaPanggilByIndex(${i})" class="w-full text-left p-3 border-b border-gray-100 hover:bg-indigo-50 transition">
+        <div class="text-sm font-bold text-gray-800">${s.nama}</div>
+        <div class="text-xs text-gray-500">${s.nisn} • ${s.kelas} • Nama pendek: <b>${namaPendek}</b></div>
+      </button>
+    `;
+  }).join('');
+}
+
+function pilihSiswaPanggilByIndex(idx) {
+  const s = panggilFiltered[idx];
+  if (!s) return;
+  const namaPendek = s.namaPendek || String(s.nama || '').split(' ')[0];
+  speakPanggilan(namaPendek, s.kelas || '-', panggilRepeat);
+  document.getElementById('panggilSelected').innerHTML =
+    `<b>${s.nama}</b> (${s.kelas}) dipanggil ${panggilRepeat}x`;
+}
+
+function speakPanggilan(namaPendek, kelas, repeat) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  const text = `${namaPendek}, kelas ${kelas}, silakan menuju penjemput.`;
+  let count = Number(repeat) || 1;
+
+  const speakOnce = () => {
+    if (count <= 0) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID';
+    u.rate = 0.95;
+    u.pitch = 1;
+    u.onend = () => {
+      count--;
+      if (count > 0) setTimeout(speakOnce, 250);
+    };
+    speechSynthesis.speak(u);
+  };
+  speakOnce();
+}
 
 // Fungsi Trigger untuk menampilkan modal
     function viewSiswa(siswa) {
@@ -3445,8 +3563,19 @@ function deleteGuruConfirm(username) {
         loadQRCodeSiswa(nisn, nama, kelas);
     }
     // ==========================================================================
-    // 10. START APP
+    // Menu Setting
     // ==========================================================================
+function loadSettings() {
+  stopAndBack(false);
+  setActiveMenu('Settings');
+  showView('view-settings');
+
+  google.script.run.withSuccessHandler(res => {
+    if (res.success && res.data) {
+      document.getElementById('setAppName').value = res.data.appName || '';
+    }
+  }).getBranding();
+}
 
     // ==========================================================================
     // 10. START APP
@@ -3545,6 +3674,20 @@ function deleteGuruConfirm(username) {
 
       case "saveAppConfig":
         return { newConfig: args[0] };
+      case "getSiswaByNisn":
+        return { nisn: args[0] };
+
+      case "getBranding":
+        return {};
+
+      case "saveBranding":
+        return {
+            token: args[0],
+            appName: args[1],
+            logoBase64: args[2],
+            logoMimeType: args[3],
+            logoFileName: args[4]
+        };
 
       default:
         return { args };
