@@ -1264,8 +1264,7 @@ function processTableData(type) {
                     
                     if (window.innerWidth < 768) {
                          document.getElementById('sidebar').classList.add('-translate-x-full');
-                    }
-                    
+                    } 
                     initDashboard();
                 }
             } catch (e) {
@@ -1529,6 +1528,7 @@ function processTableData(type) {
         
         // --- AMBIL DATA KELAS ---
         loadKelasSuggestions();
+        loadBrandingToUI();
     }
     
     // --- DROPDOWN KELAS LOGIC ---
@@ -2281,6 +2281,13 @@ function applyBrandingToUI(appTitle, schoolName, logoUrl) {
     img.onerror = () => { img.onerror = null; img.src = FALLBACK_LOGO; };
     img.src = (logoUrl && /^https?:\/\//i.test(logoUrl)) ? logoUrl : FALLBACK_LOGO;
   });
+}
+function loadBrandingToUI() {
+  google.script.run.withSuccessHandler(res => {
+    if (res.success && res.data) {
+      applyBrandingToUI(res.data.appTitle, res.data.schoolName, res.data.logoUrl);
+    }
+  }).getBranding();
 }
 
     // --- DATA SISWA ---
@@ -3700,13 +3707,6 @@ function loadSettings() {
     }
   }).getBranding();
 }
-
-
-    // ==========================================================================
-    // 10. START APP
-    // ==========================================================================
-
-
 </script>
 
 <script>
@@ -3863,6 +3863,7 @@ function loadSettings() {
 
 </body>
 </html>
+
 
 
 
