@@ -3804,8 +3804,15 @@ function loadSettings() {
       case "getBranding":
         return {};
 
-      case "saveBranding": 
-        return jsonOut(saveBranding(p.token, p.appTitle, p.schoolName, p.logoBase64, p.logoMimeType, p.logoFileName));
+      case "saveBranding":
+        return {
+          token: args[0],
+          appTitle: args[1],
+          schoolName: args[2],
+          logoBase64: args[3],
+          logoMimeType: args[4],
+          logoFileName: args[5]
+      };
 
       default:
         return { args };
@@ -3856,5 +3863,6 @@ function loadSettings() {
 
 </body>
 </html>
+
 
 
