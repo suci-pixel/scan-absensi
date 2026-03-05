@@ -199,8 +199,8 @@
 
                 </div>
                 <div class="sidebar-label transition-opacity duration-300 whitespace-nowrap">
-                <h1 data-app-name class="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
-                <p class="text-[9px] text-indigo-100 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
+                <h1 data-app-title class="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
+                <p data-school-name class="text-[9px] text-indigo-100 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
                 </div>
             </div>
         </div>
@@ -928,18 +928,26 @@
     <form onsubmit="submitBranding(event)" class="space-y-4">
       <div>
         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Aplikasi</label>
-        <input id="setAppName" type="text" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm" placeholder="Contoh: SD Islam Teladan Suci">
+        <input id="setAppTitle" type="text" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm" placeholder="Contoh: E-ABSENSI">
       </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Sekolah</label>
+        <input id="setSchoolName" type="text" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm" placeholder="Contoh: SD ISLAM TELADAN SUCI">
+      </div>
+
       <div>
         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Logo Aplikasi</label>
         <input id="setLogoFile" type="file" accept="image/*" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm">
       </div>
+
       <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold">
         <i class="fas fa-save mr-2"></i>Simpan
       </button>
     </form>
   </div>
 </div>
+
 
 <div id="view-rekap-absensi" class="view-section animate-fade-in">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -2232,37 +2240,48 @@ function showPanggilScanError(msg) {
     }
     // --- Menu Setting ---
 async function submitBranding(e) {
-    e.preventDefault();
-    const appName = document.getElementById('setAppName').value.trim();
-    const file = document.getElementById('setLogoFile').files[0];
-    const token = currentUser.token;
+  e.preventDefault();
+  const appTitle = document.getElementById('setAppTitle').value.trim();
+  const schoolName = document.getElementById('setSchoolName').value.trim();
+  const file = document.getElementById('setLogoFile').files[0];
+  const token = currentUser.token;
 
-    let logoBase64 = '', logoMimeType = '', logoFileName = '';
-    if (file) {
-        const buf = await file.arrayBuffer();
-        const bytes = new Uint8Array(buf);
-        let bin = '';
-        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-        logoBase64 = btoa(bin);
-        logoMimeType = file.type;
-        logoFileName = file.name;
-    }
+  let logoBase64 = '', logoMimeType = '', logoFileName = '';
+  if (file) {
+    const buf = await file.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    logoBase64 = btoa(bin);
+    logoMimeType = file.type;
+    logoFileName = file.name;
+  }
 
-    google.script.run.withSuccessHandler(res => {
-        if (res.success) {
-        showAlert('success', 'Setting tampilan tersimpan');
-        applyBrandingToUI(res.data.appName, res.data.logoUrl);
-        } else {
-        showAlert('error', res.message);
-        }
-    }).saveBranding(token, appName, logoBase64, logoMimeType, logoFileName);
+  google.script.run.withSuccessHandler(res => {
+    if (res.success) {
+      showAlert('success', 'Setting tampilan tersimpan');
+      applyBrandingToUI(res.data.appTitle, res.data.schoolName, res.data.logoUrl);
+    } else {
+      showAlert('error', res.message);
     }
-function applyBrandingToUI(appName, logoUrl) {
-    document.querySelectorAll('[data-app-name]').forEach(el => el.textContent = appName || 'SD ISLAM TELADAN SUCI');
-    if (logoUrl) {
-        document.querySelectorAll('[data-app-logo]').forEach(img => img.src = logoUrl);
-    }
-    }   
+  }).saveBranding(token, appTitle, schoolName, logoBase64, logoMimeType, logoFileName);
+}
+
+function applyBrandingToUI(appTitle, schoolName, logoUrl) {
+  document.querySelectorAll('[data-app-title]').forEach(el => {
+    el.textContent = appTitle || 'E-ABSENSI';
+  });
+
+  document.querySelectorAll('[data-school-name]').forEach(el => {
+    el.textContent = schoolName || 'SD ISLAM TELADAN SUCI';
+  });
+
+  if (logoUrl && logoUrl.startsWith('http')) {
+    document.querySelectorAll('[data-app-logo]').forEach(img => {
+      img.src = logoUrl;
+    });
+  }
+}
 
     // --- DATA SISWA ---
 function loadDataSiswa() {
@@ -3676,10 +3695,12 @@ function loadSettings() {
 
   google.script.run.withSuccessHandler(res => {
     if (res.success && res.data) {
-      document.getElementById('setAppName').value = res.data.appName || '';
+      document.getElementById('setAppTitle').value = res.data.appTitle || '';
+      document.getElementById('setSchoolName').value = res.data.schoolName || '';
     }
   }).getBranding();
 }
+
 
     // ==========================================================================
     // 10. START APP
@@ -3783,20 +3804,14 @@ function loadSettings() {
       case "getBranding":
         return {};
 
-      case "saveBranding":
-        return {
-            token: args[0],
-            appName: args[1],
-            logoBase64: args[2],
-            logoMimeType: args[3],
-            logoFileName: args[4]
-        };
+      case "saveBranding": 
+        return jsonOut(saveBranding(p.token, p.appTitle, p.schoolName, p.logoBase64, p.logoMimeType, p.logoFileName));
 
       default:
         return { args };
     }
   }
-
+  
   // ==========================
   // COMPATIBILITY SHIM
   // supaya kode lama google.script.run tetap jalan
@@ -3841,4 +3856,5 @@ function loadSettings() {
 
 </body>
 </html>
+
 
