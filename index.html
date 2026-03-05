@@ -2267,6 +2267,8 @@ async function submitBranding(e) {
 }
 
 function applyBrandingToUI(appTitle, schoolName, logoUrl) {
+  const FALLBACK_LOGO = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='%234f46e5'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='12'>LOGO</text></svg>";
+
   document.querySelectorAll('[data-app-title]').forEach(el => {
     el.textContent = appTitle || 'E-ABSENSI';
   });
@@ -2275,9 +2277,10 @@ function applyBrandingToUI(appTitle, schoolName, logoUrl) {
     el.textContent = schoolName || 'SD ISLAM TELADAN SUCI';
   });
 
-  if (logoUrl && /^https?:\/\//i.test(logoUrl)) {
-    document.querySelectorAll('[data-app-logo]').forEach(img => { img.src = logoUrl; });
-  }
+  document.querySelectorAll('[data-app-logo]').forEach(img => {
+    img.onerror = () => { img.onerror = null; img.src = FALLBACK_LOGO; };
+    img.src = (logoUrl && /^https?:\/\//i.test(logoUrl)) ? logoUrl : FALLBACK_LOGO;
+  });
 }
 
     // --- DATA SISWA ---
@@ -3860,6 +3863,7 @@ function loadSettings() {
 
 </body>
 </html>
+
 
 
 
