@@ -62,16 +62,11 @@
     /* Print Styles */
     @media print {
       body { background: white !important; }
-      * { color: black !important; background: white !important; }
-      body * { visibility: hidden; }
-      #view-kartu-siswa, #view-kartu-siswa * { visibility: visible; }
-      #view-kartu-siswa { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-      #kartuSiswaContainer { position: relative; width: 100%; height: 100%; }
-      .flex.justify-center.items-center.h-full.py-12 { padding: 20px; height: auto; display: flex; justify-content: center; align-items: center; }
-      .bg-white.rounded-3xl { box-shadow: none; border: 2px solid #000; margin: 0; width: 100%; max-width: none; }
-      .bg-gradient-to-r.from-indigo-600.to-purple-600 { background: #4f46e5 !important; }
-      button { display: none !important; }
-      canvas { display: block !important; page-break-inside: avoid; }
+      #view-kartu-siswa button { display: none !important; }
+      #view-kartu-siswa .flex.justify-center.items-center.h-full.py-12 { padding: 20px; }
+      #view-kartu-siswa .bg-white.rounded-3xl { box-shadow: none; border: 2px solid #000; margin: 0; }
+      #view-kartu-siswa .bg-gradient-to-r.from-indigo-600.to-purple-600 { background: #4f46e5 !important; -webkit-print-color-adjust: exact; }
+      #view-kartu-siswa canvas { display: block !important; page-break-inside: avoid; }
     }
   </style>
 </head>
@@ -255,7 +250,7 @@
                       <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Hari ini</p>
                       <p class="text-xs font-bold text-slate-700" id="currentDateDisplay">Senin, 1 Jan 2026</p>
                   </div>
-                  <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 relative cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition shadow-sm">
+                  <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 relative cursor-pointer hover:bg-slate-50 hover:border-slate-300 transition shadow-sm" onclick="showNotifications()">
                       <i class="far fa-bell text-xs"></i>
                       <span class="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full ring-1 ring-white"></span>
                   </div>
@@ -1179,6 +1174,11 @@
                 rekap: { fullData: [], filtered: [], limit: 10, page: 1, search: '' },
                 monitoring: { fullData: [], filtered: [], limit: 10, page: 1, search: '', statusFilter: '' }
             };
+
+    // --- NOTIFICATION FUNCTION ---
+    function showNotifications() {
+        showAlert('info', 'Fitur notifikasi belum diimplementasikan. Akan ditambahkan di versi mendatang.');
+    }
 
 function handleTableSearch(type, query) {
         tableState[type].search = query.toLowerCase();
@@ -3149,7 +3149,7 @@ function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
                         <span class="inline-block px-4 py-1.5 bg-gray-200 text-gray-700 rounded-full text-sm font-bold shadow-sm">${kelasSiswa}</span>
                     </div>
                     <div class="p-5 bg-white border-t border-gray-100 flex gap-4">
-                        <button onclick="window.print()" class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-bold text-sm shadow hover:bg-black transition flex items-center justify-center">
+                        <button onclick="printStudentCard()" class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-bold text-sm shadow hover:bg-black transition flex items-center justify-center">
                             <i class="fas fa-print mr-2"></i> Cetak
                         </button>
                         <button onclick="${backFunction}" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition">
@@ -3174,6 +3174,14 @@ function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
                 document.getElementById("myQrcode").textContent = "Error NISN";
             }
         }, 100);
+    }
+
+    function printStudentCard() {
+        try {
+            window.print();
+        } catch (error) {
+            showAlert('error', 'Gagal mencetak kartu: ' + error.message);
+        }
     }
     // --- SCANNER ---
     function loadScanAbsensi(mode = 'absensi') {
