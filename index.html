@@ -63,10 +63,8 @@
     @media print {
       body { background: white !important; }
       #view-kartu-siswa button { display: none !important; }
-      #view-kartu-siswa .flex.justify-center.items-center.h-full.py-12 { padding: 20px; }
-      #view-kartu-siswa .bg-white.rounded-3xl { box-shadow: none; border: 2px solid #000; margin: 0; }
       #view-kartu-siswa .bg-gradient-to-r.from-indigo-600.to-purple-600 { background: #4f46e5 !important; -webkit-print-color-adjust: exact; }
-      #view-kartu-siswa canvas { display: block !important; page-break-inside: avoid; }
+      #view-kartu-siswa canvas { display: block !important; }
     }
   </style>
 </head>
@@ -3105,8 +3103,11 @@ function changeStatus(nisn, nama, kelas, selectElement) {
     .updateAbsensiStatus(token, nisn, nama, kelas, newStatus); // <-- Token dikirim
 }
     // --- KARTU SISWA ---
-function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
+    let qrcodeReady = false;
+    
+    function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
         stopAndBack(false);
+        qrcodeReady = false;
         
         // Ubah highlight menu sesuai role
         if(currentUser.role === 'siswa') {
@@ -3141,7 +3142,7 @@ function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
             
                     <div class="p-8 text-center bg-gray-50">
                         <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-200 inline-block mb-5">
-                            <div id="myQrcode"></div>
+                            <div id="myQrcode" style="display: flex; align-items: center; justify-content: center; min-height: 200px;"></div>
                         </div>
     
                         <h3 class="text-2xl font-bold text-gray-800 mb-1">${namaSiswa}</h3>
@@ -3149,7 +3150,7 @@ function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
                         <span class="inline-block px-4 py-1.5 bg-gray-200 text-gray-700 rounded-full text-sm font-bold shadow-sm">${kelasSiswa}</span>
                     </div>
                     <div class="p-5 bg-white border-t border-gray-100 flex gap-4">
-                        <button onclick="printStudentCard()" class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-bold text-sm shadow hover:bg-black transition flex items-center justify-center">
+                        <button onclick="printStudentCard()" class="flex-1 bg-gray-900 text-white py-3 rounded-xl font-bold text-sm shadow hover:bg-black transition flex items-center justify-center" id="btnCetakKartu">
                             <i class="fas fa-print mr-2"></i> Cetak
                         </button>
                         <button onclick="${backFunction}" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-xl font-bold text-sm hover:bg-gray-50 transition">
@@ -3159,28 +3160,46 @@ function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
                 </div>
             </div>`;
 
+        // Generate QR Code dengan timeout yang lebih lama
         setTimeout(() => {
             if (nisnSiswa) {
-                document.getElementById("myQrcode").innerHTML = "";
-                new QRCode(document.getElementById("myQrcode"), {
-                    text: String(nisnSiswa),
-                    width: 160,
-                    height: 160,
-                    colorDark: "#1f2937",
-                    colorLight: "#ffffff",
-                    correctLevel : QRCode.CorrectLevel.H
-                });
+                const qrcodeDiv = document.getElementById("myQrcode");
+                if (qrcodeDiv) {
+                    qrcodeDiv.innerHTML = "";
+                    try {
+                        new QRCode(qrcodeDiv, {
+                            text: String(nisnSiswa),
+                            width: 160,
+                            height: 160,
+                            colorDark: "#1f2937",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                        qrcodeReady = true;
+                    } catch (err) {
+                        qrcodeDiv.textContent = "Error generating QR: " + err.message;
+                    }
+                }
             } else {
-                document.getElementById("myQrcode").textContent = "Error NISN";
+                const qrcodeDiv = document.getElementById("myQrcode");
+                if (qrcodeDiv) qrcodeDiv.textContent = "Error NISN";
             }
-        }, 100);
+        }, 300);
     }
 
     function printStudentCard() {
+        if (!qrcodeReady) {
+            showAlert('warning', 'Tunggu sampai QR Code selesai dimuat...');
+            return;
+        }
+        
         try {
-            window.print();
+            // Tambahkan sedikit delay sebelum print untuk memastikan render sempurna
+            setTimeout(() => {
+                window.print();
+            }, 500);
         } catch (error) {
-            showAlert('error', 'Gagal mencetak kartu: ' + error.message);
+            showAlert('error', 'Gagal membuka dialog cetak: ' + error.message);
         }
     }
     // --- SCANNER ---
