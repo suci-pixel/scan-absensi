@@ -58,6 +58,21 @@
     /* Table Styles */
     .table-header { @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 sticky top-0; }
     .table-cell { @apply px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-b border-gray-100; }
+
+    /* Print Styles */
+    @media print {
+      body { background: white !important; }
+      * { color: black !important; background: white !important; }
+      body * { visibility: hidden; }
+      #view-kartu-siswa, #view-kartu-siswa * { visibility: visible; }
+      #view-kartu-siswa { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+      #kartuSiswaContainer { position: relative; width: 100%; height: 100%; }
+      .flex.justify-center.items-center.h-full.py-12 { padding: 20px; height: auto; display: flex; justify-content: center; align-items: center; }
+      .bg-white.rounded-3xl { box-shadow: none; border: 2px solid #000; margin: 0; width: 100%; max-width: none; }
+      .bg-gradient-to-r.from-indigo-600.to-purple-600 { background: #4f46e5 !important; }
+      button { display: none !important; }
+      canvas { display: block !important; page-break-inside: avoid; }
+    }
   </style>
 </head>
 <body class="bg-slate-900 font-sans antialiased text-slate-800 selection:bg-indigo-500 selection:text-white overflow-x-hidden">
@@ -1114,20 +1129,39 @@
         guru: null
     };
 
-    let currentScanType = 'datang'; // Default scan type
-
-    function setScanType(type) {
-        currentScanType = type;
-        // Update UI tombol
-        document.getElementById('btnScanDatang').className = type === 'datang' ? 'flex-1 bg-emerald-100 text-emerald-800 py-2 rounded-lg font-bold text-xs' : 'flex-1 bg-emerald-50 text-emerald-700 py-2 rounded-lg font-bold text-xs hover:bg-emerald-100';
-        document.getElementById('btnScanPulang').className = type === 'pulang' ? 'flex-1 bg-blue-100 text-blue-800 py-2 rounded-lg font-bold text-xs' : 'flex-1 bg-blue-50 text-blue-700 py-2 rounded-lg font-bold text-xs hover:bg-blue-100';
-    }
-
     // --- CHART & UTILS ---
     let dashboardChart = null;
     let existingClasses = []; // Untuk autocomplete kelas
     let guruChartInstance = null;
     let adminChartInstance = null;
+
+    // --- AUTO LOGOUT TIMER ---
+    let inactivityTimer = null;
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+    function resetInactivityTimer() {
+        if (inactivityTimer) {
+            clearTimeout(inactivityTimer);
+        }
+        if (currentUser) { // Only set timer if user is logged in
+            inactivityTimer = setTimeout(() => {
+                showAlert('warning', 'Sesi Anda akan berakhir dalam 1 menit karena tidak ada aktivitas.');
+                setTimeout(() => {
+                    if (currentUser) {
+                        logout();
+                        showAlert('error', 'Anda telah keluar otomatis karena tidak ada aktivitas selama 30 menit.');
+                    }
+                }, 60000); // 1 minute warning
+            }, INACTIVITY_TIMEOUT);
+        }
+    }
+
+    function setupActivityListeners() {
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+        events.forEach(event => {
+            document.addEventListener(event, resetInactivityTimer, true);
+        });
+    }
 
     // Set Tanggal Hari Ini
     const dateElement = document.getElementById('currentDateDisplay');
@@ -1273,6 +1307,10 @@ function processTableData(type) {
                     if (window.innerWidth < 768) {
                          document.getElementById('sidebar').classList.add('-translate-x-full');
                     }
+                    
+                    // Setup auto-logout timer for restored session
+                    setupActivityListeners();
+                    resetInactivityTimer();
                     
                     initDashboard();
                 }
@@ -1451,7 +1489,11 @@ function processTableData(type) {
             document.getElementById('loginPage').classList.add('hidden');
             document.getElementById('dashboardContainer').classList.remove('hidden');
             
-            // 4. Inisialisasi Dashboard
+            // 4. Setup auto-logout timer
+            setupActivityListeners();
+            resetInactivityTimer();
+            
+            // 5. Inisialisasi Dashboard
             initDashboard();
         } else {
             // Tampilkan pesan error jika login gagal
@@ -1472,6 +1514,13 @@ function processTableData(type) {
         localStorage.removeItem('absensiAppSession');
         currentUser = null;
         appCache = { siswa: null, guru: null };
+        
+        // Clear inactivity timer
+        if (inactivityTimer) {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = null;
+        }
+        
         document.getElementById('dashboardContainer').classList.add('hidden');
         document.getElementById('loginPage').classList.remove('hidden');
         
