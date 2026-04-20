@@ -1153,11 +1153,19 @@
     let inactivityTimer = null;
     const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
 
+    function saveSessionToStorage() {
+        if (currentUser) {
+            currentUser.lastActivity = Date.now();
+            localStorage.setItem('absensiAppSession', JSON.stringify(currentUser));
+        }
+    }
+
     function resetInactivityTimer() {
         if (inactivityTimer) {
             clearTimeout(inactivityTimer);
         }
         if (currentUser) { // Only set timer if user is logged in
+            saveSessionToStorage();
             inactivityTimer = setTimeout(() => {
                 showAlert('warning', 'Sesi Anda akan berakhir dalam 1 menit karena tidak ada aktivitas.');
                 setTimeout(() => {
@@ -1318,7 +1326,13 @@ function processTableData(type) {
         if (storedSession) {
             try {
                 const sessionData = JSON.parse(storedSession);
+                const now = Date.now();
                 if (sessionData && sessionData.success) {
+                    if (!sessionData.lastActivity || now - sessionData.lastActivity > INACTIVITY_TIMEOUT) {
+                        localStorage.removeItem('absensiAppSession');
+                        return;
+                    }
+
                     currentUser = sessionData;
                     document.getElementById('loginPage').classList.add('hidden');
                     document.getElementById('dashboardContainer').classList.remove('hidden');
@@ -1499,10 +1513,11 @@ function processTableData(type) {
         
         if (result.success) {
             // 1. Simpan data user + TOKEN ke variabel global
-            currentUser = result; 
+            currentUser = result;
+            currentUser.lastActivity = Date.now();
             
             // 2. Simpan ke LocalStorage agar token bertahan saat refresh page
-            localStorage.setItem('absensiAppSession', JSON.stringify(result));
+            localStorage.setItem('absensiAppSession', JSON.stringify(currentUser));
             
             // 3. Update UI: Sembunyikan Login, Tampilkan Dashboard
             document.getElementById('loginPage').classList.add('hidden');
