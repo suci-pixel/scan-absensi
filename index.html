@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem Absensi Pintar</title>
-  <link rel="icon" type="image/png" href="https://suci-pixel.github.io/scan-absensi/favicon.png?v=1">
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -190,16 +190,17 @@
             <div class="flex items-center space-x-3 relative z-10 w-full">
                 <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-indigo-900/50 shrink-0 transition-all duration-300 overflow-hidden">
                 <img
-                  data-app-logo
-                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='%234f46e5'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='12'>LOGO</text></svg>"
-                  alt="Logo Aplikasi"
-                  class="w-full h-full object-contain bg-white/10"
-                />
+                    data-app-logo
+                    src="https://via.placeholder.com/64x64?text=Logo"
+                    alt="Logo Aplikasi"
+                    class="w-full h-full object-cover"
+                    onerror="this.src='https://via.placeholder.com/64x64?text=Logo';"
+                    />
 
                 </div>
                 <div class="sidebar-label transition-opacity duration-300 whitespace-nowrap">
-                <h1 data-app-title class="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
-                <p data-school-name class="text-[9px] text-indigo-100 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
+                <h1 data-app-name class="font-bold text-base tracking-wide text-white">E-ABSENSI</h1>
+                <p class="text-[9px] text-indigo-100 uppercase tracking-wider font-semibold">SD ISLAM TELADAN SUCI</p>
                 </div>
             </div>
         </div>
@@ -927,26 +928,18 @@
     <form onsubmit="submitBranding(event)" class="space-y-4">
       <div>
         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Aplikasi</label>
-        <input id="setAppTitle" type="text" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm" placeholder="Contoh: E-ABSENSI">
+        <input id="setAppName" type="text" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm" placeholder="Contoh: SD Islam Teladan Suci">
       </div>
-
-      <div>
-        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Sekolah</label>
-        <input id="setSchoolName" type="text" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm" placeholder="Contoh: SD ISLAM TELADAN SUCI">
-      </div>
-
       <div>
         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Logo Aplikasi</label>
         <input id="setLogoFile" type="file" accept="image/*" class="w-full border border-gray-200 rounded-lg p-2.5 text-sm">
       </div>
-
       <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold">
         <i class="fas fa-save mr-2"></i>Simpan
       </button>
     </form>
   </div>
 </div>
-
 
 <div id="view-rekap-absensi" class="view-section animate-fade-in">
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1021,8 +1014,8 @@
                           <th class="p-4 text-center">Jam Pulang</th>
                           <th class="p-4 text-center">Jam Jemput</th>
                           <th class="p-4 text-center">Keterangan Waktu</th>
-                          
                           <th class="p-4 text-center">Status</th>
+                          <th class="p-4 text-center w-24">Aksi</th>
                       </tr>
                   </thead>
                     <tbody id="tbody-rekap" class="bg-white divide-y divide-gray-50 text-sm"></tbody>
@@ -1070,6 +1063,10 @@
                               </div>
                               <div id="scanResult" class="hidden mb-4 text-center text-xs font-bold animate-fade-in"></div>
                               <div class="flex gap-2 mb-2">
+                                  <button id="btnScanDatang" onclick="setScanType('datang')" class="flex-1 bg-emerald-50 text-emerald-700 py-2 rounded-lg font-bold text-xs hover:bg-emerald-100">Absen Datang</button>
+                                  <button id="btnScanPulang" onclick="setScanType('pulang')" class="flex-1 bg-sky-50 text-sky-700 py-2 rounded-lg font-bold text-xs hover:bg-sky-100">Absen Pulang</button>
+                              </div>
+                              <div class="flex gap-2 mb-2">
                                   <button onclick="startCamera('environment')" class="flex-1 bg-blue-50 text-blue-700 py-2 rounded-lg font-bold text-xs hover:bg-blue-100">Belakang</button>
                                   <button onclick="startCamera('user')" class="flex-1 bg-purple-50 text-purple-700 py-2 rounded-lg font-bold text-xs hover:bg-purple-100">Depan</button>
                               </div>
@@ -1104,6 +1101,8 @@
     let isScanning = false;
     let isSidebarOpen = true; 
     let scanMode = 'absensi'; // absensi | panggil
+    let scanType = 'datang'; // datang | pulang
+    let absensiConfig = {};
     let lastSpokenKey = '';
     let daftarSiswaPanggil = [];
     let panggilRepeat = 1;
@@ -1114,6 +1113,15 @@
         siswa: null,
         guru: null
     };
+
+    let currentScanType = 'datang'; // Default scan type
+
+    function setScanType(type) {
+        currentScanType = type;
+        // Update UI tombol
+        document.getElementById('btnScanDatang').className = type === 'datang' ? 'flex-1 bg-emerald-100 text-emerald-800 py-2 rounded-lg font-bold text-xs' : 'flex-1 bg-emerald-50 text-emerald-700 py-2 rounded-lg font-bold text-xs hover:bg-emerald-100';
+        document.getElementById('btnScanPulang').className = type === 'pulang' ? 'flex-1 bg-blue-100 text-blue-800 py-2 rounded-lg font-bold text-xs' : 'flex-1 bg-blue-50 text-blue-700 py-2 rounded-lg font-bold text-xs hover:bg-blue-100';
+    }
 
     // --- CHART & UTILS ---
     let dashboardChart = null;
@@ -1264,7 +1272,8 @@ function processTableData(type) {
                     
                     if (window.innerWidth < 768) {
                          document.getElementById('sidebar').classList.add('-translate-x-full');
-                    } 
+                    }
+                    
                     initDashboard();
                 }
             } catch (e) {
@@ -1515,9 +1524,10 @@ function processTableData(type) {
             menuHTML += createItem('Dashboard', 'fa-home', 'loadGuruDashboard()', true);
             menuHTML += createItem('Monitoring', 'fa-eye', 'loadMonitoringAbsensi()');
             menuHTML += createItem('Scan Absensi', 'fa-qrcode', 'loadScanAbsensi()');
+            menuHTML += createItem('Panggil Siswa', 'fa-bullhorn', 'loadPanggilSiswa()');
             menuHTML += createItem('Settings', 'fa-cog', 'loadSettings()');
             loadGuruDashboard();
-        } 
+        }
         else if (currentUser.role === 'siswa') {
             menuHTML += createItem('Dashboard', 'fa-home', 'loadSiswaDashboard()', true);
             menuHTML += createItem('Kartu Saya', 'fa-id-card', 'loadQRCodeSiswa()');
@@ -1528,7 +1538,6 @@ function processTableData(type) {
         
         // --- AMBIL DATA KELAS ---
         loadKelasSuggestions();
-        loadBrandingToUI();
     }
     
     // --- DROPDOWN KELAS LOGIC ---
@@ -2239,56 +2248,37 @@ function showPanggilScanError(msg) {
     }
     // --- Menu Setting ---
 async function submitBranding(e) {
-  e.preventDefault();
-  const appTitle = document.getElementById('setAppTitle').value.trim();
-  const schoolName = document.getElementById('setSchoolName').value.trim();
-  const file = document.getElementById('setLogoFile').files[0];
-  const token = currentUser.token;
+    e.preventDefault();
+    const appName = document.getElementById('setAppName').value.trim();
+    const file = document.getElementById('setLogoFile').files[0];
+    const token = currentUser.token;
 
-  let logoBase64 = '', logoMimeType = '', logoFileName = '';
-  if (file) {
-    const buf = await file.arrayBuffer();
-    const bytes = new Uint8Array(buf);
-    let bin = '';
-    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-    logoBase64 = btoa(bin);
-    logoMimeType = file.type;
-    logoFileName = file.name;
-  }
-
-  google.script.run.withSuccessHandler(res => {
-    if (res.success) {
-      showAlert('success', 'Setting tampilan tersimpan');
-      applyBrandingToUI(res.data.appTitle, res.data.schoolName, res.data.logoUrl);
-    } else {
-      showAlert('error', res.message);
+    let logoBase64 = '', logoMimeType = '', logoFileName = '';
+    if (file) {
+        const buf = await file.arrayBuffer();
+        const bytes = new Uint8Array(buf);
+        let bin = '';
+        for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+        logoBase64 = btoa(bin);
+        logoMimeType = file.type;
+        logoFileName = file.name;
     }
-  }).saveBranding(token, appTitle, schoolName, logoBase64, logoMimeType, logoFileName);
-}
 
-function applyBrandingToUI(appTitle, schoolName, logoUrl) {
-  const FALLBACK_LOGO = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' fill='%234f46e5'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='12'>LOGO</text></svg>";
-
-  document.querySelectorAll('[data-app-title]').forEach(el => {
-    el.textContent = appTitle || 'E-ABSENSI';
-  });
-
-  document.querySelectorAll('[data-school-name]').forEach(el => {
-    el.textContent = schoolName || 'SD ISLAM TELADAN SUCI';
-  });
-
-  document.querySelectorAll('[data-app-logo]').forEach(img => {
-    img.onerror = () => { img.onerror = null; img.src = FALLBACK_LOGO; };
-    img.src = (logoUrl && /^https?:\/\//i.test(logoUrl)) ? logoUrl : FALLBACK_LOGO;
-  });
-}
-function loadBrandingToUI() {
-  google.script.run.withSuccessHandler(res => {
-    if (res.success && res.data) {
-      applyBrandingToUI(res.data.appTitle, res.data.schoolName, res.data.logoUrl);
+    google.script.run.withSuccessHandler(res => {
+        if (res.success) {
+        showAlert('success', 'Setting tampilan tersimpan');
+        applyBrandingToUI(res.data.appName, res.data.logoUrl);
+        } else {
+        showAlert('error', res.message);
+        }
+    }).saveBranding(token, appName, logoBase64, logoMimeType, logoFileName);
     }
-  }).getBranding();
-}
+function applyBrandingToUI(appName, logoUrl) {
+    document.querySelectorAll('[data-app-name]').forEach(el => el.textContent = appName || 'SD ISLAM TELADAN SUCI');
+    if (logoUrl) {
+        document.querySelectorAll('[data-app-logo]').forEach(img => img.src = logoUrl);
+    }
+    }   
 
     // --- DATA SISWA ---
 function loadDataSiswa() {
@@ -2661,8 +2651,7 @@ function renderRekapRows(data) {
     
     // Update colspan jadi 8 karena kolom bertambah
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" class="p-8 text-center text-gray-400">Tidak ada data ditemukan.</td></tr>';
-        return;
+        tbody.innerHTML = '<tr><td colspan="10" class="p-8 text-center text-gray-400">Tidak ada data ditemukan.</td></tr>';
     }
     
     // Helper untuk warna badge STATUS (Kolom H)
@@ -2675,19 +2664,27 @@ function renderRekapRows(data) {
     };
 
     tbody.innerHTML = data.map((d, i) => {
-        
+        const recordId = String(d.id || `${d.tanggal}|${d.nisn}`).replace(/'/g, "\\'");
+        const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'guru');
+        const actionButtons = canManage ? `
+            <div class="flex items-center justify-center gap-2">
+                <button onclick="showEditRekapModal('${recordId}')" class="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition" title="Edit"><i class="fas fa-edit"></i></button>
+                <button onclick="deleteRekapConfirm('${recordId}')" class="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition" title="Hapus"><i class="fas fa-trash"></i></button>
+            </div>
+        ` : '-';
+
         // Helper untuk warna teks KETERANGAN (Kolom G)
         let ketText = d.keterangan || "-";
         let ketStyle = "text-gray-500";
         let ketIcon = "";
         
-         if (String(ketText).includes("Terlambat")) {
+        if (String(ketText).includes("Terlambat")) {
             ketStyle = "text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded border border-rose-100 text-[10px]";
             ketIcon = '<i class="fas fa-history mr-1"></i>';
-            } else if (String(ketText).includes("Pulang Cepat")) {
+        } else if (String(ketText).includes("Pulang Cepat")) {
             ketStyle = "text-orange-600 font-bold bg-orange-50 px-2 py-1 rounded border border-orange-100 text-[10px]";
             ketIcon = '<i class="fas fa-running mr-1"></i>';
-            } else if (ketText === "Tepat Waktu") {
+        } else if (ketText === "Tepat Waktu") {
             ketStyle = "text-emerald-600 font-bold text-[10px]";
             ketIcon = '<i class="fas fa-check-double mr-1"></i>';
         }
@@ -2698,13 +2695,160 @@ function renderRekapRows(data) {
                 <td class="p-4 text-sm text-gray-600">${new Date(d.tanggal).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'})}</td>
                 <td class="p-4 text-sm font-bold text-gray-900">${d.nama}</td>
                 <td class="p-4 text-center text-sm text-gray-600"><span class="bg-gray-100 px-2 py-1 rounded text-xs font-bold">${d.kelas}</span></td>
-                <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamDatang}</td>
-                <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamPulang}</td>
+                <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamDatang || '-'}</td>
+                <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamPulang || '-'}</td>
                 <td class="p-4 text-center text-sm font-mono text-gray-600">${d.jamJemput || '-'}</td>
                 <td class="p-4 text-center align-middle"><span class="${ketStyle} inline-block whitespace-nowrap">${ketIcon}${ketText}</span></td>
                 <td class="p-4 text-center text-sm"><span class="${getStatusColor(d.status)} px-2 py-1 rounded text-xs font-bold">${d.status || 'Hadir'}</span></td>
+                <td class="p-4 text-center text-sm">${actionButtons}</td>
             </tr>`;
     }).join('');
+}
+
+function showEditRekapModal(recordId) {
+    const record = tableState.rekap.fullData.find(item => String(item.id || `${item.tanggal}|${item.nisn}`) === recordId);
+    if (!record) return showAlert('error', 'Data tidak ditemukan.');
+
+    showModal(createRekapEditModal(record));
+}
+
+function createRekapEditModal(record) {
+    const inputClass = "w-full bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-3 transition-all mb-4";
+
+    return `
+    <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-xl w-full animate-fade-in">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/80">
+            <div>
+                <h3 class="text-xl font-bold text-gray-800">Edit Rekap Absensi</h3>
+                <p class="text-xs text-gray-500 mt-1">Perbarui status dan keterangan absensi.</p>
+            </div>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="p-6">
+            <form onsubmit="saveRekapUpdate(event)">
+                <input type="hidden" name="recordId" value="${record.id || `${record.tanggal}|${record.nisn}`}">
+                <input type="hidden" name="tanggal" value="${record.tanggal}">
+                <input type="hidden" name="nama" value="${record.nama}">
+                <input type="hidden" name="nisn" value="${record.nisn}">
+                <input type="hidden" name="kelas" value="${record.kelas}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tanggal</label>
+                        <input type="text" value="${new Date(record.tanggal).toLocaleDateString('id-ID')}" disabled class="${inputClass} bg-gray-100" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Siswa</label>
+                        <input type="text" value="${record.nama}" disabled class="${inputClass} bg-gray-100" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Jam Datang</label>
+                        <input type="time" name="jamDatang" value="${record.jamDatang || ''}" class="${inputClass}" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Jam Pulang</label>
+                        <input type="time" name="jamPulang" value="${record.jamPulang || ''}" class="${inputClass}" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Jam Jemput</label>
+                        <input type="time" name="jamJemput" value="${record.jamJemput || ''}" class="${inputClass}" />
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
+                        <select name="status" class="${inputClass}">
+                            <option value="Hadir" ${record.status === 'Hadir' ? 'selected' : ''}>Hadir</option>
+                            <option value="Izin" ${record.status === 'Izin' ? 'selected' : ''}>Izin</option>
+                            <option value="Sakit" ${record.status === 'Sakit' ? 'selected' : ''}>Sakit</option>
+                            <option value="Alpa" ${record.status === 'Alpa' ? 'selected' : ''}>Alpa</option>
+                            <option value="Belum Absen" ${record.status === 'Belum Absen' ? 'selected' : ''}>Belum Absen</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Keterangan</label>
+                        <input type="text" name="keterangan" value="${record.keterangan || ''}" class="${inputClass}" placeholder="Terlambat / Tepat Waktu / ..." />
+                    </div>
+                </div>
+                <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                    <button type="button" onclick="closeModal()" class="w-full sm:w-auto px-4 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition">Batal</button>
+                    <button type="submit" class="w-full sm:w-auto px-4 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>`;
+}
+
+function saveRekapUpdate(event) {
+    event.preventDefault();
+    const form = event.target;
+    const fd = new FormData(form);
+    const recordId = fd.get('recordId');
+    const token = currentUser ? currentUser.token : null;
+
+    const updatedRecord = {
+        recordId,
+        jamDatang: fd.get('jamDatang') || '',
+        jamPulang: fd.get('jamPulang') || '',
+        jamJemput: fd.get('jamJemput') || '',
+        keterangan: fd.get('keterangan') || '',
+        status: fd.get('status') || 'Hadir'
+    };
+
+    const btn = form.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-2"></i> Menyimpan...';
+
+    google.script.run.withSuccessHandler(res => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        if (res.success) {
+            closeModal();
+            tableState.rekap.fullData = [];
+            applyFilter();
+            showAlert('success', 'Data absensi berhasil diperbarui');
+        } else {
+            showAlert('error', res.message || 'Gagal memperbarui data.');
+        }
+    }).withFailureHandler(err => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showAlert('error', 'Gagal koneksi: ' + err);
+    }).updateAbsensiRecord(
+        token,
+        recordId,
+        fd.get('tanggal'),
+        fd.get('nama'),
+        fd.get('nisn'),
+        fd.get('kelas'),
+        updatedRecord.jamDatang,
+        updatedRecord.jamPulang,
+        updatedRecord.jamJemput,
+        updatedRecord.keterangan,
+        updatedRecord.status
+    );
+}
+
+function deleteRekapConfirm(recordId) {
+    if (!recordId) return;
+    if (!confirm('Hapus data absensi ini?')) return;
+    const token = currentUser ? currentUser.token : null;
+    showLoading();
+    google.script.run.withSuccessHandler(res => {
+        hideLoading();
+        if (res.success) {
+            tableState.rekap.fullData = [];
+            applyFilter();
+            showAlert('success', 'Data absensi berhasil dihapus');
+        } else {
+            showAlert('error', res.message || 'Gagal menghapus data.');
+        }
+    }).withFailureHandler(err => {
+        hideLoading();
+        showAlert('error', 'Gagal koneksi: ' + err);
+    }).deleteAbsensiRecord(token, recordId);
 }
 
     // --- MONITORING ---
@@ -2720,14 +2864,14 @@ function loadMonitoringAbsensi() {
     if (tableState.monitoring.fullData.length > 0) {
         processTableData('monitoring');
     } else {
-        document.getElementById('tbody-monitoring').innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...</td></tr>';
+        document.getElementById('tbody-monitoring').innerHTML = '<tr><td colspan="9" class="p-8 text-center text-gray-500"><i class="fas fa-circle-notch fa-spin mr-2"></i>Memuat data...</td></tr>';
         
         google.script.run.withSuccessHandler(result => {
             if (result.success) {
                 tableState.monitoring.fullData = result.data;
                 processTableData('monitoring');
             } else {
-                document.getElementById('tbody-monitoring').innerHTML = '<tr><td colspan="6" class="p-12 text-center text-gray-400 italic bg-white">Data tidak ditemukan.</td></tr>';
+                document.getElementById('tbody-monitoring').innerHTML = '<tr><td colspan="9" class="p-12 text-center text-gray-400 italic bg-white">Data tidak ditemukan.</td></tr>';
             }
         }).getMonitoringRealtime(myClass); // Pass Parameter
     }
@@ -2788,7 +2932,7 @@ function renderMonitoringRows(data, startIdx) {
     
     // 1. Cek jika data kosong
     if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="p-12 text-center text-gray-400 italic bg-white">Tidak ada data ditemukan.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="p-12 text-center text-gray-400 italic bg-white">Tidak ada data ditemukan.</td></tr>';
         return;
     }
 
@@ -2831,19 +2975,21 @@ function renderMonitoringRows(data, startIdx) {
         return `
         <tr class="hover:bg-gray-50 border-b border-gray-50 transition group">
             <td class="p-4 text-center text-gray-400 text-xs">${startIdx + i + 1}</td>
-            
+            <td class="p-4 text-sm text-gray-600">${new Date(d.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
             <td class="p-4">
                 <div class="font-bold text-sm text-gray-900">${d.nama}</div>
-                <div class="text-xs text-gray-500 font-mono">${d.nisn}</div>
+                <div class="text-xs text-gray-500 font-mono">${d.nisn || '-'}</div>
             </td>
             
             <td class="p-4 text-center">
-                <span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-bold border border-indigo-100">${d.kelas}</span>
+                <span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs font-bold border border-indigo-100">${d.kelas || '-'}</span>
             </td>
             
-            <td class="p-4 text-center text-xs font-mono text-gray-600">${d.jamDatang}</td>
+            <td class="p-4 text-center text-xs font-mono text-gray-600">${d.jamDatang || '-'}</td>
             
-            <td class="p-4 text-center text-xs font-mono text-gray-600">${d.jamPulang}</td>
+            <td class="p-4 text-center text-xs font-mono text-gray-600">${d.jamPulang || '-'}</td>
+            
+            <td class="p-4 text-center text-xs font-mono text-gray-600">${d.jamJemput || '-'}</td>
 
             <td class="p-4 text-center align-middle">
                  <span class="${ketStyle} inline-block whitespace-nowrap">${ketIcon}${ketText}</span>
@@ -2986,9 +3132,56 @@ function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
         isScanning = false;
         setActiveMenu(mode === 'panggil' ? 'Panggil Siswa' : 'Scan Absensi');
         showView('view-scanner');
-        setTimeout(() => { startCamera('environment'); }, 500);
+        loadScanConfig().finally(() => {
+            scanType = getDefaultScanType();
+            updateScanTypeButtons();
+            setTimeout(() => { startCamera('environment'); }, 500);
+        });
     }
 
+    function setScanType(type) {
+        scanType = type === 'pulang' ? 'pulang' : 'datang';
+        updateScanTypeButtons();
+    }
+
+    function updateScanTypeButtons() {
+        const btnDatang = document.getElementById('btnScanDatang');
+        const btnPulang = document.getElementById('btnScanPulang');
+        if (btnDatang && btnPulang) {
+            const activeClass = 'bg-emerald-600 text-white hover:bg-emerald-700';
+            const inactiveClass = 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100';
+            const activeClassPulang = 'bg-sky-600 text-white hover:bg-sky-700';
+            const inactiveClassPulang = 'bg-sky-50 text-sky-700 hover:bg-sky-100';
+            btnDatang.className = `flex-1 py-2 rounded-lg font-bold text-xs ${scanType === 'datang' ? activeClass : inactiveClass}`;
+            btnPulang.className = `flex-1 py-2 rounded-lg font-bold text-xs ${scanType === 'pulang' ? activeClassPulang : inactiveClassPulang}`;
+        }
+    }
+
+    function getDefaultScanType() {
+        if (!absensiConfig || !absensiConfig.jam_masuk_akhir || !absensiConfig.jam_pulang_mulai) return 'datang';
+        try {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            const batasMasuk = new Date(`${today}T${absensiConfig.jam_masuk_akhir}`);
+            const mulaiPulang = new Date(`${today}T${absensiConfig.jam_pulang_mulai}`);
+            if (now >= mulaiPulang) return 'pulang';
+            if (now > batasMasuk) return 'pulang';
+        } catch (e) {
+            return 'datang';
+        }
+        return 'datang';
+    }
+
+    function loadScanConfig() {
+        return new Promise(resolve => {
+            google.script.run.withSuccessHandler(res => {
+                if (res.success && res.data) {
+                    absensiConfig = res.data;
+                }
+                resolve();
+            }).withFailureHandler(() => resolve()).getAppConfig();
+        });
+    }
 
     function startCamera(mode) {
         if (html5QrCode) {
@@ -3158,7 +3351,7 @@ function onScanSuccess(decodedText) {
                 // Jeda lebih lama (4 detik) agar guru sempat membaca pesan error beda kelas
                 setTimeout(() => { isScanning = false; }, 4000);
             }
-        }).scanAbsensi(decodedText, myRole, myKelas); // <-- Pastikan 3 parameter dikirim
+        }).scanAbsensi(decodedText, myRole, myKelas, scanType); // <-- Kirim juga tipe absen
     }
 
     function stopAndBack(redirect = true) {
@@ -3702,11 +3895,16 @@ function loadSettings() {
 
   google.script.run.withSuccessHandler(res => {
     if (res.success && res.data) {
-      document.getElementById('setAppTitle').value = res.data.appTitle || '';
-      document.getElementById('setSchoolName').value = res.data.schoolName || '';
+      document.getElementById('setAppName').value = res.data.appName || '';
     }
   }).getBranding();
 }
+
+    // ==========================================================================
+    // 10. START APP
+    // ==========================================================================
+
+
 </script>
 
 <script>
@@ -3746,7 +3944,7 @@ function loadSettings() {
         return { token: args[0], nisn: args[1] };
 
       case "scanAbsensi":
-        return { nisn: args[0], scannerRole: args[1], scannerKelas: args[2] };
+        return { nisn: args[0], scannerRole: args[1], scannerKelas: args[2], scanType: args[3] || 'datang' };
 
       case "getMonitoringRealtime":
         return { filterKelas: args[0] || null };
@@ -3790,6 +3988,24 @@ function loadSettings() {
       case "updateAbsensiStatus":
         return { token: args[0], nisn: args[1], nama: args[2], kelas: args[3], newStatus: args[4] };
 
+      case "updateAbsensiRecord":
+        return {
+          token: args[0],
+          recordId: args[1],
+          tanggal: args[2],
+          nama: args[3],
+          nisn: args[4],
+          kelas: args[5],
+          jamDatang: args[6],
+          jamPulang: args[7],
+          jamJemput: args[8],
+          keterangan: args[9],
+          status: args[10]
+        };
+
+      case "deleteAbsensiRecord":
+        return { token: args[0], recordId: args[1] };
+
       case "generateExcel":
         return { type: args[0], filters: args[1] || {} };
 
@@ -3806,19 +4022,18 @@ function loadSettings() {
 
       case "saveBranding":
         return {
-          token: args[0],
-          appTitle: args[1],
-          schoolName: args[2],
-          logoBase64: args[3],
-          logoMimeType: args[4],
-          logoFileName: args[5]
-      };
+            token: args[0],
+            appName: args[1],
+            logoBase64: args[2],
+            logoMimeType: args[3],
+            logoFileName: args[4]
+        };
 
       default:
         return { args };
     }
   }
-  
+
   // ==========================
   // COMPATIBILITY SHIM
   // supaya kode lama google.script.run tetap jalan
@@ -3863,8 +4078,6 @@ function loadSettings() {
 
 </body>
 </html>
-
-
 
 
 
