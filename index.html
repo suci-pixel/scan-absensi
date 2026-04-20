@@ -3106,6 +3106,7 @@ function changeStatus(nisn, nama, kelas, selectElement) {
     let qrcodeReady = false;
     
     function loadQRCodeSiswa(nisnParam, namaParam, kelasParam) {
+        if (isScanning) stopAndBack(false); // Hanya stop jika scanner sedang jalan
         qrcodeReady = false;
         
         // Ubah highlight menu sesuai role
@@ -3430,20 +3431,27 @@ function onScanSuccess(decodedText) {
     }
 
     function stopAndBack(redirect = true) {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-            html5QrCode.clear();
-            html5QrCode = null;
-            isScanning = false;
-            if (redirect && currentUser) returnAfterScanner();
-            }).catch(() => {
-            html5QrCode = null;
-            if (redirect && currentUser) returnAfterScanner();
-            });
+        if (html5QrCode && isScanning) {
+            try {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                    isScanning = false;
+                    if (redirect && currentUser) returnAfterScanner();
+                }).catch(() => {
+                    html5QrCode = null;
+                    isScanning = false;
+                    if (redirect && currentUser) returnAfterScanner();
+                });
+            } catch (e) {
+                html5QrCode = null;
+                isScanning = false;
+                if (redirect && currentUser) returnAfterScanner();
+            }
         } else {
             if (redirect && currentUser) returnAfterScanner();
         }
-        }
+    }
 
     function returnAfterScanner() {
         if (scanMode === 'panggil') {
@@ -4153,6 +4161,9 @@ function loadSettings() {
 
 </body>
 </html>
+
+
+
 
 
 
